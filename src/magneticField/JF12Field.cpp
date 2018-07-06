@@ -11,80 +11,94 @@ double logisticFunction(double x, double x0, double w) {
 	return 1. / (1. + exp(-2. * (fabs(x) - x0) / w));
 }
 
-JF12Field::JF12Field() {
+JF12Field::JF12Field(int seed, double rs, double wh, double r0Turb, double z0Turb) {
 	useRegular = true;
 	useStriated = false;
 	useTurbulent = false;
 
+  Random regRand;
+  regRand.seed(seed);
+
+  // This model has been modified to use updated parameters
+  // published by the Planck collaboration in
+  // arxiv.org/abs/1601.00546v2
+  // These updates should be considered more robust than
+  // original values due to inclusion of Planck dust maps
+
 	// spiral arm parameters
-	pitch = 11.5 * M_PI / 180;
+  pitch = 11.5 * M_PI / 180;
 	sinPitch = sin(pitch);
 	cosPitch = cos(pitch);
 	tan90MinusPitch = tan(M_PI / 2 - pitch);
-
-	rArms[0] = 5.1 * kpc;
-	rArms[1] = 6.3 * kpc;
-	rArms[2] = 7.1 * kpc;
-	rArms[3] = 8.3 * kpc;
-	rArms[4] = 9.8 * kpc;
-	rArms[5] = 11.4 * kpc;
-	rArms[6] = 12.7 * kpc;
-	rArms[7] = 15.5 * kpc;
+  
+  // r_x
+	rArms[0] = 4.947 * kpc;
+	rArms[1] = 6.111 * kpc;
+	rArms[2] = 6.887 * kpc;
+	rArms[3] = 8.051 * kpc;
+	rArms[4] = 9.506 * kpc;
+	rArms[5] = 11.058 * kpc;
+	rArms[6] = 12.319 * kpc;
+	rArms[7] = 15.035 * kpc;
 
 	// regular field parameters
-	bRing = 0.1 * muG;
-	hDisk = 0.40 * kpc;
-	wDisk = 0.27 * kpc;
 
-	bDisk[0] = 0.1 * muG;
-	bDisk[1] = 3.0 * muG;
-	bDisk[2] = -0.9 * muG;
-	bDisk[3] = -0.8 * muG;
-	bDisk[4] = -2.0 * muG;
-	bDisk[5] = -4.2 * muG;
-	bDisk[6] = 0.0 * muG;
-	bDisk[7] = 2.7 * muG;
+  //   --- disk parameters
+  bRing = regRand.randNorm(0.1,0.01) * muG;
+  hDisk = regRand.randNorm(0.40,0.0009) * kpc;
+	wDisk = regRand.randNorm(0.27,0.0064) * kpc;
 
-	bNorth = 1.4 * muG;
-	bSouth = -1.1 * muG;
-	rNorth = 9.22 * kpc;
-	rSouth = 17 * kpc;
-	wHalo = 0.20 * kpc;
-	z0 = 5.3 * kpc;
+	bDisk[0] = regRand.randNorm(0.1,3.24) * muG;  // b1
+	bDisk[1] = regRand.randNorm(2.4,.36) * muG;   // b2
+	bDisk[2] = regRand.randNorm(-0.9,.64) * muG;  // b3
+	bDisk[3] = regRand.randNorm(0.88,.09) * muG;  // b4
+	bDisk[4] = regRand.randNorm(-2.6,.01) * muG;  // b5
+	bDisk[5] = regRand.randNorm(-3.78,.25) * muG; // b6
+	bDisk[6] = regRand.randNorm(0.0,3.24) * muG;  // b7
+	bDisk[7] = regRand.randNorm(2.7,3.24) * muG;  // b8
 
-	bX = 4.6 * muG;
-	thetaX0 = 49.0 * M_PI / 180;
+  //   --- toroidal halo parameters
+	bNorth = regRand.randNorm(1.16,.01) * muG;
+	bSouth = regRand.randNorm(-0.92,.01) * muG;
+	rNorth = regRand.randNorm(9.22,.0064) * kpc;
+	rSouth = rs * kpc;
+	wHalo = wh * kpc;
+	z0 = regRand.randNorm(5.3,2.56) * kpc;
+
+  //   --- X halo parameters
+	bX = regRand.randNorm(3.64,.09) * muG;
+	thetaX0 = regRand.randNorm(49.0,1.) * M_PI / 180;
 	sinThetaX0 = sin(thetaX0);
 	cosThetaX0 = cos(thetaX0);
 	tanThetaX0 = tan(thetaX0);
-	rXc = 4.8 * kpc;
-	rX = 2.9 * kpc;
+	rXc = regRand.randNorm(4.8,.04) * kpc;
+	rX = regRand.randNorm(2.9,.01) * kpc;
 
 	// striated field parameter
-	sqrtbeta = sqrt(1.36);
+	sqrtbeta = regRand.randNorm(sqrt(6.54),0.1296);
 
 	// turbulent field parameters
-	bDiskTurb[0] = 10.81 * muG;
-	bDiskTurb[1] = 6.96 * muG;
-	bDiskTurb[2] = 9.59 * muG;
-	bDiskTurb[3] = 6.96 * muG;
-	bDiskTurb[4] = 1.96 * muG;
-	bDiskTurb[5] = 16.34 * muG;
-	bDiskTurb[6] = 37.29 * muG;
-	bDiskTurb[7] = 10.35 * muG;
+	bDiskTurb[0] = regRand.randNorm(4.972,5.4289) * muG;  // b1
+	bDiskTurb[1] = regRand.randNorm(6.126,2.4964) * muG;  // b2
+	bDiskTurb[2] = regRand.randNorm(4.412,1.21) * muG;    // b3
+	bDiskTurb[3] = regRand.randNorm(6.126,0.7569) * muG;  // b4
+	bDiskTurb[4] = regRand.randNorm(0.904,1.7424) * muG;  // b5
+	bDiskTurb[5] = regRand.randNorm(22.22,6.401) * muG;   // b6
+	bDiskTurb[6] = regRand.randNorm(17.154,5.7121) * muG; // b7
+	bDiskTurb[7] = regRand.randNorm(9.11,19.625) * muG;   // b8
 
-	bDiskTurb5 = 7.63 * muG;
-	zDiskTurb = 0.61 * kpc;
+	bDiskTurb5 = regRand.randNorm(5.39,1.932) * muG;      // bint
+	zDiskTurb = regRand.randNorm(0.61,0.0016) * kpc;
 
-	bHaloTurb = 4.68 * muG;
-	rHaloTurb = 10.97 * kpc;
-	zHaloTurb = 2.84 * kpc;
+	bHaloTurb = regRand.randNorm(4.68,1.9321) * muG;
+	rHaloTurb = r0Turb * kpc;
+	zHaloTurb = z0Turb * kpc;
 }
 
 void JF12Field::randomStriated(int seed) {
 	useStriated = true;
-	int N = 100;
-	striatedGrid = new ScalarGrid(Vector3d(0.), N, 0.1 * kpc);
+	int N = 200;
+	striatedGrid = new ScalarGrid(Vector3d(0.), N, 0.05 * kpc);
 
 	Random random;
 	if (seed != 0)
@@ -102,8 +116,8 @@ void JF12Field::randomStriated(int seed) {
 void JF12Field::randomTurbulent(int seed) {
 	useTurbulent = true;
 	// turbulent field with Kolmogorov spectrum, B_rms = 1 and Lc = 60 parsec
-	turbulentGrid = new VectorGrid(Vector3d(0.), 256, 4 * parsec);
-	initTurbulence(turbulentGrid, 1, 8 * parsec, 272 * parsec, -11./3., seed);
+	turbulentGrid = new VectorGrid(Vector3d(0.), 512, 2 * parsec);
+	initTurbulence(turbulentGrid, 7.8, 10 * parsec, 224 * parsec, -11./3., seed);
 }
 #endif
 

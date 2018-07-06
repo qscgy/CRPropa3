@@ -67,7 +67,7 @@ private:
 	double zHaloTurb; // Gaussian scale height
 
 public:
-	JF12Field();
+	JF12Field(int seed = 0, double rs = 17., double wh = 0.2, double r0Turb = 11., double z0Turb = 2.9);
 
 	// Create and set a random realization for the striated field
 	void randomStriated(int seed = 0);
