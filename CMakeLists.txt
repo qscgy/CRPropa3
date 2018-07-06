@@ -292,7 +292,7 @@ endif()
 # ----------------------------------------------------------------------------
 # Download data files (interaction data, masses, decay data ...)
 # ----------------------------------------------------------------------------
-OPTION(DOWNLOAD_DATA "Download CRProap Data files" ON)
+OPTION(DOWNLOAD_DATA "Download CRProap Data files" OFF)
 if(DOWNLOAD_DATA)
 	message("-- Downloading data file from crpropa.desy.de ~ 50 MB")
 	file(DOWNLOAD
